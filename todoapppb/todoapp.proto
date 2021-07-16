@@ -1,0 +1,38 @@
+syntax = "proto3";
+
+package todoapppb;
+option go_package="github.com/akshay196/todoapppb";
+
+import "google/protobuf/empty.proto";
+
+message TodoItem {
+  int32 id = 1;
+  string value = 2;
+}
+
+message TodoListResponse {
+  repeated TodoItem Tasks = 1;
+}
+
+message TodoAddItemRequest {
+  string task = 1;
+}
+
+message TodoDeleteItemRequest {
+  int32 id = 1;
+}
+
+service TodoService {
+  // Returns all Todo list items.
+  rpc ListTodo(google.protobuf.Empty) returns (TodoListResponse) {};
+
+  // Add an item to the Todo list. Returns error of type
+  // INVALID_ARGUMENT when adding an item which is already present in
+  // the Todo list.
+  rpc AddTodoItem(TodoAddItemRequest) returns (google.protobuf.Empty) {};
+
+  // Delete an item from the Todo list. Returns error of type
+  // INVALID_ARGUMENT when deleting an item which is not present in
+  // the Todo list.
+  rpc DeleteTodoItem(TodoDeleteItemRequest) returns (google.protobuf.Empty) {};
+}
