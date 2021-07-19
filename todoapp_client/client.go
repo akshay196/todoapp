@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"time"
 
 	"github.com/akshay196/todoapp/todoapppb"
 	"google.golang.org/grpc"
@@ -28,8 +29,17 @@ func main() {
 }
 
 func doList(c todoapppb.TodoServiceClient) {
-	res, err := c.ListTodo(context.Background(), &emptypb.Empty{})
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	defer cancel()
+	res, err := c.ListTodo(ctx, &emptypb.Empty{})
 	if err != nil {
+		resErr, ok := status.FromError(err)
+		if ok {
+			if resErr.Code() == codes.DeadlineExceeded {
+				fmt.Println("Timed out!")
+				return
+			}
+		}
 		fmt.Printf("Failed to fetch todo list: %v\n", err)
 		return
 	}
@@ -45,16 +55,22 @@ func doList(c todoapppb.TodoServiceClient) {
 }
 
 func addTask(c todoapppb.TodoServiceClient, newTask string) {
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	defer cancel()
+
 	req := &todoapppb.TodoAddItemRequest{
 		Task: newTask,
 	}
-	_, err := c.AddTodoItem(context.Background(), req)
+	_, err := c.AddTodoItem(ctx, req)
 	if err != nil {
 		resErr, ok := status.FromError(err)
 		if ok {
 			if resErr.Code() == codes.InvalidArgument {
-				// fmt.Println("Probably the task is already present")
 				fmt.Println(resErr.Message())
+				return
+			}
+			if resErr.Code() == codes.DeadlineExceeded {
+				fmt.Println("Timed out!")
 				return
 			}
 		}
@@ -66,15 +82,22 @@ func addTask(c todoapppb.TodoServiceClient, newTask string) {
 }
 
 func delTask(c todoapppb.TodoServiceClient, id int32) {
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	defer cancel()
+
 	req := &todoapppb.TodoDeleteItemRequest{
 		Id: id,
 	}
-	_, err := c.DeleteTodoItem(context.Background(), req)
+	_, err := c.DeleteTodoItem(ctx, req)
 	if err != nil {
 		resErr, ok := status.FromError(err)
 		if ok {
 			if resErr.Code() == codes.InvalidArgument {
 				fmt.Println(resErr.Message())
+				return
+			}
+			if resErr.Code() == codes.DeadlineExceeded {
+				fmt.Println("Timed out!")
 				return
 			}
 		}
