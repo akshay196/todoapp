@@ -27,7 +27,7 @@ type todoappService struct {
 }
 
 func (*todoappService) ListTodo(ctx context.Context, req *emptypb.Empty) (*pb.TodoListResponse, error) {
-	log.Printf("Received request to list: %v\n", req)
+	log.Println("Received request to list")
 	var list []*pb.TodoItem
 	for id, value := range database {
 		list = append(list, &pb.TodoItem{
@@ -70,6 +70,10 @@ func (*todoappService) DeleteTodoItem(ctx context.Context, req *pb.TodoDeleteIte
 	delete(database, id)
 	mutex.Unlock()
 	return &emptypb.Empty{}, nil
+}
+
+func New() *todoappService {
+	return &todoappService{}
 }
 
 func main() {
